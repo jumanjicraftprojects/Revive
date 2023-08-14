@@ -5,7 +5,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
 
+import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,12 +28,13 @@ public class ReviveListener implements Listener {
     public void onDamage(EntityDamageEvent e) {
         if (!e.isCancelled() && e.getEntity() instanceof Player && !e.getEntity().hasMetadata("NPC")) {
             Player player = (Player) e.getEntity();
+
             if (!player.hasPermission("revive.disable")
                     && player.getHealth() - e.getFinalDamage() <= 0
                     && !downedStates.containsKey(player)
                     && !cooldownPlayers.contains(player.getUniqueId())) {
                 e.setCancelled(true);
-                downedStates.put(player, new DownedState(player));
+                downedStates.put(player, new DownedState(player, e.getCause()));
             } else if (downedStates.containsKey(player) && e.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION) {
                 e.setCancelled(true);
             }
