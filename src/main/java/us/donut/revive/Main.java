@@ -25,10 +25,6 @@ public class Main extends JavaPlugin {
         return true;
     }
 
-    public ReviveListener getReviveListener() {
-        return reviveListener;
-    }
-
     public static Main getInstance() {
         return instance;
     }

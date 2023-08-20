@@ -1,7 +1,6 @@
 package us.donut.revive;
 
 import java.util.List;
-import java.util.UUID;
 
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
@@ -21,8 +20,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-
-import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 
 
 public class DownedState {
@@ -129,12 +126,8 @@ public class DownedState {
                     armorStand.removePassenger(player);
                     player.teleport(player.getLocation().add(0, 0.1, 0));
                     player.removePotionEffect(PotionEffectType.BLINDNESS);
-                    UUID uuid = player.getUniqueId();
-                    plugin.getReviveListener().getCooldownPlayers().add(uuid);
-                    Bukkit.getScheduler().runTaskLater(plugin,
-                            () -> plugin.getReviveListener().getCooldownPlayers().remove(uuid),
-                            (long) (plugin.getConfig().getDouble("down-cooldown-seconds") * 20));
-                    delete();
+
+                    DownedStateManager.removeDownedState(player);
                 } else {
                     reviveBar.setProgress(time / duration);
                     time++;
@@ -152,7 +145,6 @@ public class DownedState {
     }
 
     public void delete() {
-        plugin.getReviveListener().getDownedStates().remove(player);
         if (armorStand != null) {
             armorStand.remove();
         }
@@ -207,5 +199,6 @@ public class DownedState {
         var damageEvent = new EntityDamageEvent(player, downReason, player.getHealth());
         player.setLastDamageCause(damageEvent);
         player.setHealth(0);
+        DownedStateManager.removeDownedState(player);
     }
 }
