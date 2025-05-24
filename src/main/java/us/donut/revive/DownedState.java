@@ -2,33 +2,30 @@ package us.donut.revive;
 
 import java.util.List;
 
-import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
-import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 
 public class DownedState {
 
     private Main plugin = Main.getInstance();
-    private HolographicDisplaysAPI holoApi = HolographicDisplaysAPI.get(plugin);
     private Player player;
     private ArmorStand armorStand;
-    private Hologram hologram;
+    private TextDisplay display;
     private BukkitTask groundTask;
     private BukkitTask downTask;
     private BukkitTask bleedoutTask;
@@ -59,13 +56,15 @@ public class DownedState {
                         armorStand.addPassenger(player);
                     });
 
-                    hologram = holoApi.createHologram(player.getEyeLocation().add(0, 1.5, 0));
-                    hologram.getLines().appendText(ChatColor.RED + "Revive");
+                    var displayLocation = player.getEyeLocation().add(0, 1.5, 0);
+                    display = player.getWorld().spawn(displayLocation, TextDisplay.class, entity ->{
+                        entity.setText(ChatColor.RED + "Revive");
+                        entity.setBillboard(Display.Billboard.VERTICAL);
+                    });
 
                     downTask = new BukkitRunnable() {
                         @Override
                         public void run() {
-                            hologram.setPosition(player.getEyeLocation().add(0, 1.5, 0));
                         	if(promptRange >= 0) {
                         		List<Entity> near = player.getNearbyEntities(promptRange, promptRange, 256.0D);
                         		boolean nearPlayer = false;
@@ -100,7 +99,7 @@ public class DownedState {
         var reviveRange = plugin.getConfig().getDouble("revive-range");
         reviveRange = reviveRange <= 0 ? 1 : reviveRange;
 
-        if(reviver.getLocation().distance(player.getLocation()) > reviveRange){
+        if(reviver.getLocation().distance(player.getLocation()) > reviveRange || !isLookingAt(reviver, player)){
             if(isReviving()){
                 endRevive();
             }
@@ -109,9 +108,7 @@ public class DownedState {
 
         bleedoutTask.cancel();
         bleedoutTask = null;
-        hologram.getLines().clear();
-        hologram.getLines().appendText(ChatColor.GREEN + "Reviving...");
-        hologram.getLines().appendText(String.valueOf(ChatColor.BOLD) + ChatColor.RED + "Don't move");
+        display.setText(ChatColor.GREEN + "Reviving...");
         reviveBar = Bukkit.createBossBar(ChatColor.GREEN + "Reviving...", BarColor.GREEN, BarStyle.SOLID);
         reviveBar.addPlayer(player);
         reviveBar.addPlayer(reviver);
@@ -132,7 +129,7 @@ public class DownedState {
                     reviveBar.setProgress(time / duration);
                     time++;
 
-                    if(reviver.getLocation().distance(player.getLocation()) > finalReviveRange){
+                    if(reviver.getLocation().distance(player.getLocation()) > finalReviveRange || !isLookingAt(reviver, player)){
                         if(isReviving()){
                             endRevive();
                             reviveTask.cancel();
@@ -141,15 +138,15 @@ public class DownedState {
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0, 1);
+        }.runTaskTimer(plugin, 0, 5);
     }
 
     public void delete() {
         if (armorStand != null) {
             armorStand.remove();
         }
-        if (hologram != null) {
-            hologram.delete();
+        if (display != null) {
+            display.remove();
         }
         if (groundTask != null) {
             groundTask.cancel();
@@ -191,8 +188,8 @@ public class DownedState {
                 player.damage(damage);
             }, 0, 20);
         }
-        hologram.getLines().clear();
-        hologram.getLines().appendText(ChatColor.RED + "Revive");
+
+        display.setText(ChatColor.RED + "Revive");
     }
 
     private void killPlayer(){
@@ -200,5 +197,16 @@ public class DownedState {
         player.setLastDamageCause(damageEvent);
         player.setHealth(0);
         DownedStateManager.removeDownedState(player);
+    }
+
+    private boolean isLookingAt(Player reviver, Player downed) {
+        var raycast =
+                reviver.getWorld().rayTraceEntities(
+                        reviver.getEyeLocation(),
+                        reviver.getEyeLocation().getDirection(),
+                        plugin.getConfig().getDouble("revive-range"),
+                        entity -> entity.getUniqueId().equals(downed.getUniqueId())
+                );
+        return raycast != null && raycast.getHitEntity() != null;
     }
 }

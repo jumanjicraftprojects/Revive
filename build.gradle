@@ -19,6 +19,5 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT'
-    implementation files('lib/holographicdisplays-plugin-3.0.3.jar')
+    compileOnly 'org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT'
 }

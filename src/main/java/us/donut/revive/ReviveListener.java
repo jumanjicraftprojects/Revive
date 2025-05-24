@@ -15,12 +15,14 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.io.Console;
+import java.util.logging.Level;
+
 public class ReviveListener implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageEvent e) {
         if (!e.isCancelled() && e.getEntity() instanceof Player player && !e.getEntity().hasMetadata("NPC")) {
-
             var isDowned = DownedStateManager.getState(player) != null;
             if (!player.hasPermission("revive.disable")
                     && player.getHealth() - e.getFinalDamage() <= 0
