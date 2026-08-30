@@ -14,6 +14,8 @@ import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.GameMode;
+import org.bukkit.inventory.EquipmentSlot;
 
 import java.io.Console;
 import java.util.logging.Level;
@@ -40,6 +42,9 @@ public class ReviveListener implements Listener {
     public void onInteract(PlayerInteractAtEntityEvent e) {
         DownedState downedState = DownedStateManager.getState(e.getRightClicked().getUniqueId());
         if (downedState != null) {
+            if(e.getHand()==EquipmentSlot.HAND&&Main.getInstance().isInstantPotion(e.getPlayer().getInventory().getItemInMainHand())){
+                e.setCancelled(true);if(e.getPlayer().getGameMode()!=GameMode.CREATIVE){var potion=e.getPlayer().getInventory().getItemInMainHand();potion.setAmount(potion.getAmount()-1);}downedState.instantRevive(e.getPlayer());return;
+            }
             if (e.getPlayer().isSneaking()) {
                 InventoryManager.openInventory(e.getPlayer(), downedState.getPlayer());
             } else if (!downedState.isReviving()) {

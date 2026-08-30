@@ -1,15 +1,24 @@
 name: Revive
-version: '1.0'
-api-version: '1.13'
+version: '${version}'
+api-version: '1.21'
 author: Donut
 main: us.donut.revive.Main
-command:
+softdepend: [JumanjiAtlas]
+commands:
   reloadrevive:
-    permission:
-      revive.reload
+    description: Reload Revive configuration.
+    permission: revive.reload
+  revivepotion:
+    description: Give an instant revive potion.
+    usage: /revivepotion [player] [amount]
+    permission: revive.potion.give
 permissions:
   revive.disable:
     description: Prevents a player from being revived
     default: false
   revive.reload:
     description: Allows /reloadrevive
+    default: op
+  revive.potion.give:
+    description: Gives instant revive potions.
+    default: op

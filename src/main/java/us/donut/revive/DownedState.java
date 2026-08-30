@@ -41,7 +41,7 @@ public class DownedState {
         Location downedLocation = player.getLocation();
         player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 1, false, false));
-        double damage = plugin.getConfig().getDouble("bleedout-damage-per-second") * 2;
+        double damage = plugin.bleedDamage(player);
         bleedoutTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> player.damage(damage), 0, 20);
 
         groundTask = new BukkitRunnable() {
@@ -119,12 +119,7 @@ public class DownedState {
             @Override
             public void run() {
                 if (time >= duration) {
-                    player.setHealth(plugin.getConfig().getDouble("revive-health") * 2);
-                    armorStand.removePassenger(player);
-                    player.teleport(player.getLocation().add(0, 0.1, 0));
-                    player.removePotionEffect(PotionEffectType.BLINDNESS);
-
-                    DownedStateManager.removeDownedState(player);
+                    finishRevive(plugin.getConfig().getDouble("revive-health"));
                 } else {
                     reviveBar.setProgress(time / duration);
                     time++;
@@ -138,7 +133,17 @@ public class DownedState {
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0, 5);
+        }.runTaskTimer(plugin, 0, 1);
+    }
+
+    public void instantRevive(Player reviver) {
+        finishRevive(plugin.getConfig().getDouble("instant-revive-health",6));
+        player.sendMessage(ChatColor.GREEN+"You were revived instantly by "+reviver.getName()+".");
+    }
+
+    private void finishRevive(double healthHearts){
+        double maximum=player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();player.setHealth(Math.min(maximum,Math.max(1,healthHearts*2)));
+        if(armorStand!=null)armorStand.removePassenger(player);player.teleport(player.getLocation().add(0,.1,0));player.removePotionEffect(PotionEffectType.BLINDNESS);DownedStateManager.removeDownedState(player);
     }
 
     public void delete() {
@@ -180,7 +185,7 @@ public class DownedState {
             reviveBar.removeAll();
         }
 
-        double damage = plugin.getConfig().getDouble("bleedout-damage-per-second") * 2;
+        double damage = plugin.bleedDamage(player);
         if(bleedoutTask == null || bleedoutTask.isCancelled()){
             bleedoutTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
                 var damageEvent = new EntityDamageEvent(player, downReason, damage);

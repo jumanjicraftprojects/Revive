@@ -1,6 +1,10 @@
 bleedout-damage-per-second: 0.5
+# Every Atlas title tier after the first reduces bleed damage by this fraction.
+atlas-bleedout-reduction-per-tier: 0.08
+atlas-bleedout-minimum-multiplier: 0.40
 down-cooldown-seconds: 10
 revive-duration-seconds: 5
 revive-health: 3
 revive-range: 1
 down-range: 10
+instant-revive-health: 6
