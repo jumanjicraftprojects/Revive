@@ -9,7 +9,7 @@ commands:
     description: Reload Revive configuration.
     permission: revive.reload
   revivepotion:
-    description: Give an instant revive potion.
+    description: Give a splash revive potion.
     usage: /revivepotion [player] [amount]
     permission: revive.potion.give
 permissions:
@@ -20,5 +20,5 @@ permissions:
     description: Allows /reloadrevive
     default: op
   revive.potion.give:
-    description: Gives instant revive potions.
+    description: Gives splash revive potions.
     default: op

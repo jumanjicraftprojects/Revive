@@ -127,8 +127,6 @@ public class DownedState {
                     if(reviver.getLocation().distance(player.getLocation()) > finalReviveRange || !isLookingAt(reviver, player)){
                         if(isReviving()){
                             endRevive();
-                            reviveTask.cancel();
-                            reviveTask = null;
                         }
                     }
                 }
@@ -166,7 +164,7 @@ public class DownedState {
             reviveTask.cancel();
         }
         if (reviveBar != null) {
-            reviveBar.removeAll();
+            if (reviveBar != null) reviveBar.removeAll();
         }
     }
 

@@ -8,7 +8,7 @@ Revive replaces immediate player death with a cooperative downed state. Nearby p
 - Downed players ride an invisible support entity, receive blindness, cannot manipulate inventories or drop items, and stop attracting mobs.
 - Manual revive progress appears to both players in a boss bar and now honors the configured real-time duration.
 - Higher JumanjiAtlas title tiers bleed out more slowly. The default is 8% less damage per tier with a 40% minimum multiplier; Revive safely falls back to tier 1 when Atlas is absent or unloaded.
-- Instant Revive Potions revive a downed player immediately when used directly on them. Operators obtain them with `/revivepotion [player] [amount]`; survival use consumes one potion.
+- Splash Revive Potions revive every downed friend caught in the splash. Operators obtain them with `/revivepotion [player] [amount]`, and players can buy them from JumanjiCraft Core's `/supplies` shop.
 
 ## Commands and permissions
 
@@ -21,7 +21,7 @@ Revive replaces immediate player death with a cooperative downed state. Nearby p
 
 ## Build
 
-Requires Java 21. Run `./gradlew clean build`; the jar is written to `build/libs/Revive-1.1.0.jar`. JumanjiAtlas is an optional soft dependency.
+Requires Java 21. Run `./gradlew clean build`; the jar is written to `build/libs/Revive-1.2.0.jar`. JumanjiAtlas is an optional soft dependency.
 
 ## Configuration
 

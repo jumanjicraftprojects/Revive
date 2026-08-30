@@ -8,6 +8,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
@@ -42,14 +43,30 @@ public class ReviveListener implements Listener {
     public void onInteract(PlayerInteractAtEntityEvent e) {
         DownedState downedState = DownedStateManager.getState(e.getRightClicked().getUniqueId());
         if (downedState != null) {
-            if(e.getHand()==EquipmentSlot.HAND&&Main.getInstance().isInstantPotion(e.getPlayer().getInventory().getItemInMainHand())){
-                e.setCancelled(true);if(e.getPlayer().getGameMode()!=GameMode.CREATIVE){var potion=e.getPlayer().getInventory().getItemInMainHand();potion.setAmount(potion.getAmount()-1);}downedState.instantRevive(e.getPlayer());return;
-            }
             if (e.getPlayer().isSneaking()) {
                 InventoryManager.openInventory(e.getPlayer(), downedState.getPlayer());
             } else if (!downedState.isReviving()) {
                 downedState.revive(e.getPlayer());
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPotionSplash(PotionSplashEvent event) {
+        if (!Main.getInstance().isInstantPotion(event.getPotion().getItem())) return;
+        Player thrower = event.getPotion().getShooter() instanceof Player player ? player : null;
+        int revived = 0;
+        for (LivingEntity entity : event.getAffectedEntities()) {
+            if (!(entity instanceof Player player) || event.getIntensity(entity) <= 0) continue;
+            DownedState state = DownedStateManager.getState(player);
+            if (state == null) continue;
+            state.instantRevive(thrower == null ? player : thrower);
+            revived++;
+        }
+        if (thrower != null) {
+            thrower.sendMessage(revived == 0
+                    ? org.bukkit.ChatColor.RED + "The splash did not reach a downed player."
+                    : org.bukkit.ChatColor.GREEN + "Revived " + revived + " downed player" + (revived == 1 ? "." : "s."));
         }
     }
 
