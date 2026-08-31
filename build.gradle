@@ -2,8 +2,8 @@ plugins {
     id 'java'
 }
 
-group 'us.donut'
-version '1.2.0'
+group = 'us.donut'
+version = '1.2.1'
 
 repositories {
     mavenCentral()
@@ -24,7 +24,12 @@ dependencies {
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:deprecation']
+}
+
+def pluginVersion = version.toString()
 processResources {
-    inputs.property 'version', project.version
-    filesMatching('plugin.yml') { expand(version: project.version) }
+    inputs.property 'version', pluginVersion
+    filesMatching('plugin.yml') { expand(version: pluginVersion) }
 }

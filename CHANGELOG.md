@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+- Reduced downed-player proximity checks from every tick to four times per second.
+- Replaced broad entity scans with direct player distance checks.
+- Simplified revive potion text and cleaned up command handling.
+
 ## 1.2.0
 
 - Converted instant revive items into throwable splash potions that can revive multiple downed friends.

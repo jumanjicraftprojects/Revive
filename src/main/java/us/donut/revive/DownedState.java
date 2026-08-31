@@ -1,11 +1,8 @@
 package us.donut.revive;
 
-import java.util.List;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -47,7 +44,7 @@ public class DownedState {
         groundTask = new BukkitRunnable() {
             @Override
             public void run() {
-                if (player.isOnGround()) {
+                if (isGrounded()) {
                     armorStand = player.getWorld().spawn(player.getLocation().getBlock().getLocation().subtract(0, 1, 0), ArmorStand.class, armorStand ->  {
                         armorStand.setVisible(false);
                         armorStand.setGravity(false);
@@ -65,29 +62,23 @@ public class DownedState {
                     downTask = new BukkitRunnable() {
                         @Override
                         public void run() {
-                        	if(promptRange >= 0) {
-                        		List<Entity> near = player.getNearbyEntities(promptRange, promptRange, 256.0D);
-                        		boolean nearPlayer = false;
-                        		
-                        		for(Entity entity : near) {
-                        			if(entity instanceof org.bukkit.entity.Player && !entity.isDead()) {
-                        	        	nearPlayer = true;
-                        	        	break;
-                        			}
-                        		}
-                        		if(!nearPlayer) {
+                            if (promptRange >= 0) {
+                                boolean nearPlayer = player.getWorld().getPlayers().stream()
+                                        .anyMatch(other -> !other.equals(player) && !other.isDead()
+                                                && other.getLocation().distanceSquared(player.getLocation()) <= promptRange * promptRange);
+                                if (!nearPlayer) {
                                     player.teleport(downedLocation, TeleportCause.PLUGIN);
-                        			killPlayer();
-                        			cancel();
-                        		}
-                        	}
+                                    killPlayer();
+                                    cancel();
+                                }
+                            }
                             if (!armorStand.equals(player.getVehicle())) {
                             	player.teleport(downedLocation, TeleportCause.PLUGIN);
                                 killPlayer();
                                 cancel();
                             }
                         }
-                    }.runTaskTimer(plugin, 0, 1);
+                    }.runTaskTimer(plugin, 0, 5);
 
                     cancel();
                 }
@@ -164,7 +155,7 @@ public class DownedState {
             reviveTask.cancel();
         }
         if (reviveBar != null) {
-            if (reviveBar != null) reviveBar.removeAll();
+            reviveBar.removeAll();
         }
     }
 
@@ -176,6 +167,7 @@ public class DownedState {
         return player;
     }
 
+    @SuppressWarnings({"deprecation", "removal"})
     private void endRevive(){
         if(reviveTask != null){
             reviveTask.cancel();
@@ -195,6 +187,7 @@ public class DownedState {
         display.setText(ChatColor.RED + "Revive");
     }
 
+    @SuppressWarnings({"deprecation", "removal"})
     private void killPlayer(){
         var damageEvent = new EntityDamageEvent(player, downReason, player.getHealth());
         player.setLastDamageCause(damageEvent);
@@ -211,5 +204,10 @@ public class DownedState {
                         entity -> entity.getUniqueId().equals(downed.getUniqueId())
                 );
         return raycast != null && raycast.getHitEntity() != null;
+    }
+
+    /** Uses the server's block state instead of the deprecated client-reported ground flag. */
+    private boolean isGrounded() {
+        return player.getLocation().subtract(0, 0.05, 0).getBlock().getType().isSolid();
     }
 }
