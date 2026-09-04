@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.4
+
+- Makes splash revive potions reliably find nearby downed players even without vanilla potion effects.
+- Prevents duplicate off-hand revive interactions and cancels the underlying entity action.
+- Bounds health, distance, duration, cooldown, and bleedout configuration values.
+- Uses the validated revive range consistently and avoids repeated square-root distance checks.
+- Disables live downed-inventory editing by default to eliminate crash/desync duplication windows.
+
 ## 1.2.3
 
 - Blocks drag, hotbar-swap, and shift-click bypasses in downed-player loot inventories.

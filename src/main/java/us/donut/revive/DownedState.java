@@ -34,7 +34,7 @@ public class DownedState {
         this.player = player;
         this.downReason = downReason;
 
-    	double promptRange = plugin.getConfig().getDouble("down-range");
+        double promptRange = plugin.bounded("down-range", 32, 0, 128);
         Location downedLocation = player.getLocation();
         player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 1, false, false));
@@ -90,11 +90,10 @@ public class DownedState {
 
     public void revive(Player reviver) {
         if (armorStand == null || display == null || !player.isOnline()) return;
-        var reviveRange = plugin.getConfig().getDouble("revive-range");
-        reviveRange = reviveRange <= 0 ? 1 : reviveRange;
+        var reviveRange = plugin.bounded("revive-range", 3, 1, 12);
 
         if(!reviver.getWorld().equals(player.getWorld())
-                || reviver.getLocation().distance(player.getLocation()) > reviveRange || !isLookingAt(reviver, player)){
+                || reviver.getLocation().distanceSquared(player.getLocation()) > reviveRange * reviveRange || !isLookingAt(reviver, player, reviveRange)){
             if(isReviving()){
                 endRevive();
             }
@@ -107,20 +106,20 @@ public class DownedState {
         reviveBar = Bukkit.createBossBar(ChatColor.GREEN + "Reviving...", BarColor.GREEN, BarStyle.SOLID);
         reviveBar.addPlayer(player);
         reviveBar.addPlayer(reviver);
-        double duration = plugin.getConfig().getDouble("revive-duration-seconds", 1) * 20;
+        double duration = plugin.bounded("revive-duration-seconds", 1, .1, 60) * 20;
         double finalReviveRange = reviveRange;
         reviveTask = new BukkitRunnable() {
             private double time = 0;
             @Override
             public void run() {
                 if (time >= duration) {
-                    finishRevive(plugin.getConfig().getDouble("revive-health"));
+                    finishRevive(plugin.bounded("revive-health", 3, .5, 100));
                 } else {
                     reviveBar.setProgress(time / duration);
                     time++;
 
                     if(!reviver.isOnline() || !reviver.getWorld().equals(player.getWorld())
-                            || reviver.getLocation().distance(player.getLocation()) > finalReviveRange || !isLookingAt(reviver, player)){
+                            || reviver.getLocation().distanceSquared(player.getLocation()) > finalReviveRange * finalReviveRange || !isLookingAt(reviver, player, finalReviveRange)){
                         if(isReviving()){
                             endRevive();
                         }
@@ -131,7 +130,7 @@ public class DownedState {
     }
 
     public void instantRevive(Player reviver) {
-        finishRevive(plugin.getConfig().getDouble("instant-revive-health",6));
+        finishRevive(plugin.bounded("instant-revive-health", 6, .5, 100));
         player.sendMessage(ChatColor.GREEN+"You were revived instantly by "+reviver.getName()+".");
     }
 
@@ -202,12 +201,12 @@ public class DownedState {
         DownedStateManager.removeDownedState(player);
     }
 
-    private boolean isLookingAt(Player reviver, Player downed) {
+    private boolean isLookingAt(Player reviver, Player downed, double range) {
         var raycast =
                 reviver.getWorld().rayTraceEntities(
                         reviver.getEyeLocation(),
                         reviver.getEyeLocation().getDirection(),
-                        plugin.getConfig().getDouble("revive-range"),
+                        range,
                         entity -> entity.getUniqueId().equals(downed.getUniqueId())
                 );
         return raycast != null && raycast.getHitEntity() != null;

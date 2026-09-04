@@ -8,3 +8,6 @@ revive-health: 3
 revive-range: 1
 down-range: 10
 instant-revive-health: 6
+# Disabled by default because editing a downed player's live inventory creates
+# unavoidable crash/desync duplication risk across other inventory plugins.
+allow-downed-inventory-access: false

@@ -59,7 +59,7 @@ public class DownedStateManager {
                 cooldowns.add(player.getUniqueId());
                 Bukkit.getScheduler().runTaskLater(Main.getInstance(),
                         () -> cooldowns.remove(player.getUniqueId()),
-                        Math.max(1L, (long) (Main.getInstance().getConfig().getDouble("down-cooldown-seconds") * 20)));
+                        Math.max(1L, (long) (Main.getInstance().bounded("down-cooldown-seconds", 30, .05, 3600) * 20)));
             }
         }
     }

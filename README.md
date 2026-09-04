@@ -21,7 +21,7 @@ Revive replaces immediate player death with a cooperative downed state. Nearby p
 
 ## Build
 
-Requires Java 21. Run `./gradlew clean build`; the jar is written to `build/libs/Revive-1.2.3.jar`. JumanjiAtlas is an optional soft dependency.
+Requires Java 21. Run `./gradlew clean build`; the jar is written to `build/libs/Revive-1.2.4.jar`. JumanjiAtlas is an optional soft dependency.
 
 ## Configuration
 

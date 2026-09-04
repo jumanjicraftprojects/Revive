@@ -94,9 +94,15 @@ public class Main extends JavaPlugin {
                 // Atlas is optional; use the base bleed rate if its API is unavailable.
             }
         }
-        double reduction = getConfig().getDouble("atlas-bleedout-reduction-per-tier", .08);
-        double minimum = getConfig().getDouble("atlas-bleedout-minimum-multiplier", .4);
-        return getConfig().getDouble("bleedout-damage-per-second", .5) * 2
-                * Math.max(minimum, 1.0 - (Math.max(1, tier) - 1) * reduction);
+        double reduction = finite(getConfig().getDouble("atlas-bleedout-reduction-per-tier", .08), .08);
+        double minimum = Math.clamp(finite(getConfig().getDouble("atlas-bleedout-minimum-multiplier", .4), .4), .05, 1);
+        double base = Math.clamp(finite(getConfig().getDouble("bleedout-damage-per-second", .5), .5), .01, 10);
+        return base * 2 * Math.max(minimum, 1.0 - (Math.max(1, tier) - 1) * Math.clamp(reduction, 0, .5));
+    }
+
+    private double finite(double value, double fallback) { return Double.isFinite(value) ? value : fallback; }
+
+    public double bounded(String path, double fallback, double minimum, double maximum) {
+        return Math.clamp(finite(getConfig().getDouble(path, fallback), fallback), minimum, maximum);
     }
 }

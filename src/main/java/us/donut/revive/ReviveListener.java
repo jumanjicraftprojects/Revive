@@ -42,9 +42,12 @@ public class ReviveListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractAtEntityEvent e) {
+        if (e.getHand() != EquipmentSlot.HAND) return;
         DownedState downedState = DownedStateManager.getState(e.getRightClicked().getUniqueId());
         if (downedState != null) {
-            if (e.getPlayer().isSneaking()) {
+            e.setCancelled(true);
+            if (e.getPlayer().isSneaking()
+                    && Main.getInstance().getConfig().getBoolean("allow-downed-inventory-access", false)) {
                 InventoryManager.openInventory(e.getPlayer(), downedState.getPlayer());
             } else if (!downedState.isReviving()) {
                 downedState.revive(e.getPlayer());
@@ -57,8 +60,10 @@ public class ReviveListener implements Listener {
         if (!Main.getInstance().isInstantPotion(event.getPotion().getItem())) return;
         Player thrower = event.getPotion().getShooter() instanceof Player player ? player : null;
         int revived = 0;
-        for (LivingEntity entity : event.getAffectedEntities()) {
-            if (!(entity instanceof Player player) || event.getIntensity(entity) <= 0) continue;
+        // Custom potions intentionally carry no vanilla effect. Some server builds therefore
+        // report an empty affected-entity list, so use the actual splash radius instead.
+        for (Player player : event.getPotion().getWorld().getPlayers()) {
+            if (player.getLocation().distanceSquared(event.getPotion().getLocation()) > 16.0) continue;
             DownedState state = DownedStateManager.getState(player);
             if (state == null) continue;
             state.instantRevive(thrower == null ? player : thrower);
