@@ -5,6 +5,9 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -37,52 +40,54 @@ public class InventoryView {
     }
 
     public void onInteract(InventoryClickEvent event){
-        String typeName = null;
         var item = event.getCursor();
         var currentItem = event.getCurrentItem();
-        if(item != null && !item.getType().isAir()){
-            typeName = item.getType().name();
+
+        if(event.getAction() == InventoryAction.COLLECT_TO_CURSOR){
+            deny(event);
+            return;
+        }
+
+        // A shift-click from the viewer can otherwise spill into the equipment or
+        // decorative slots of this chest-shaped player inventory.
+        if(event.getClickedInventory() != view && event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY){
+            deny(event);
+            return;
         }
 
         if(event.getClickedInventory() == view){
             if(event.getSlot() > offhandSlot || (event.getSlot() > 35 && event.getSlot() < helmetSlot)){
-                // These slots are not part of the players
-                event.setResult(Event.Result.DENY);
-                event.setCancelled(true);
+                deny(event);
                 return;
             }
+
+            ItemStack incoming = item;
+            if(event.getHotbarButton() >= 0)
+                incoming = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
+            else if(event.getClick() == ClickType.SWAP_OFFHAND && event.getWhoClicked() instanceof Player viewer)
+                incoming = viewer.getInventory().getItemInOffHand();
+            else if(event.getClick().isKeyboardClick()) incoming = null;
+            String typeName = incoming == null || incoming.getType().isAir() ? null : incoming.getType().name();
 
             switch (event.getSlot()) {
                 case helmetSlot -> {
                     if (typeName != null && !typeName.endsWith("_HELMET")) {
-                        event.setResult(Event.Result.DENY);
-                        event.setCancelled(true);
-                    } else {
-                        //owner.getInventory().setHelmet(item);
+                        deny(event);
                     }
                 }
                 case chestplateSlot -> {
                     if (typeName != null && !typeName.endsWith("_CHESTPLATE")) {
-                        event.setResult(Event.Result.DENY);
-                        event.setCancelled(true);
-                    } else {
-                        //owner.getInventory().setChestplate(item);
+                        deny(event);
                     }
                 }
                 case leggingSlot -> {
                     if (typeName != null && !typeName.endsWith("_LEGGINGS")) {
-                        event.setResult(Event.Result.DENY);
-                        event.setCancelled(true);
-                    } else {
-                        //owner.getInventory().setLeggings(item);
+                        deny(event);
                     }
                 }
                 case bootSlot -> {
                     if (typeName != null && !typeName.endsWith("_BOOTS")) {
-                        event.setResult(Event.Result.DENY);
-                        event.setCancelled(true);
-                    } else {
-                        //owner.getInventory().setBoots(item);
+                        deny(event);
                     }
                 }
                 case offhandSlot -> {}
@@ -104,6 +109,36 @@ public class InventoryView {
         else{
             Bukkit.getScheduler().runTaskLater(Main.getInstance(), this::saveInvChanges, 1L);
         }
+    }
+
+    public void onDrag(InventoryDragEvent event){
+        for(var entry : event.getNewItems().entrySet()){
+            int slot = entry.getKey();
+            if(slot >= view.getSize()) continue;
+            if(slot > offhandSlot || (slot > 35 && slot < helmetSlot)
+                    || !validEquipment(slot, entry.getValue())){
+                event.setCancelled(true);
+                return;
+            }
+        }
+        Bukkit.getScheduler().runTaskLater(Main.getInstance(), this::saveInvChanges, 1L);
+    }
+
+    private boolean validEquipment(int slot, ItemStack item){
+        if(item == null || item.getType().isAir()) return true;
+        String type = item.getType().name();
+        return switch(slot){
+            case helmetSlot -> type.endsWith("_HELMET");
+            case chestplateSlot -> type.endsWith("_CHESTPLATE");
+            case leggingSlot -> type.endsWith("_LEGGINGS");
+            case bootSlot -> type.endsWith("_BOOTS");
+            default -> true;
+        };
+    }
+
+    private void deny(InventoryClickEvent event){
+        event.setResult(Event.Result.DENY);
+        event.setCancelled(true);
     }
 
     private void saveInvChanges(){

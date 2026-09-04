@@ -82,7 +82,8 @@ public class DownedStateManager {
     }
 
     public static void setNewTarget(Mob mob){
-        var range = mob.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).getValue();
+        var attribute = mob.getAttribute(Attribute.GENERIC_FOLLOW_RANGE);
+        var range = attribute == null ? 16.0 : Math.max(1.0, attribute.getValue());
         var close = mob.getNearbyEntities(range, range, range);
         if(close.size() <= 0) return;
 

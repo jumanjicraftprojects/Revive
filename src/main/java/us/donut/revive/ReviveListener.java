@@ -10,6 +10,7 @@ import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -100,15 +101,6 @@ public class ReviveListener implements Listener {
         if(state != null){
             e.setCancelled(true);
             mob.setTarget(null);
-
-            if(mob.getTarget() != null && mob.getTarget() != player){
-                var target = mob.getTarget();
-                if(!(target instanceof Player tPlayer)) return;
-
-                var tState = DownedStateManager.getState(tPlayer);
-                if(tState == null) return;
-            }
-
             DownedStateManager.setNewTarget(mob);
         }
     }
@@ -123,6 +115,15 @@ public class ReviveListener implements Listener {
         }
 
         InventoryManager.passClickEvent(event);
+    }
+
+    @EventHandler
+    public void inventoryDragEvent(InventoryDragEvent event){
+        if(DownedStateManager.getState(event.getWhoClicked().getUniqueId()) != null){
+            event.setCancelled(true);
+            return;
+        }
+        InventoryManager.passDragEvent(event);
     }
 
     @EventHandler

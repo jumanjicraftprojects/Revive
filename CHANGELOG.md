@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.3
+
+- Blocks drag, hotbar-swap, and shift-click bypasses in downed-player loot inventories.
+- Validates every equipment slot before syncing it to the downed player.
+- Handles mobs without a follow-range attribute and removes dead retargeting logic.
+
 ## 1.2.2
 
 - Fully removes downed-state tasks, effects, displays, carrier stands, boss bars, and inventory views on shutdown.

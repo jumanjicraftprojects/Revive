@@ -4,6 +4,7 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,6 +45,11 @@ public class InventoryManager {
         if(!viewByViewer.containsKey(id)) return;
         var view = viewByViewer.get(id);
         view.onInteract(e);
+    }
+
+    public static void passDragEvent(InventoryDragEvent e){
+        var view = viewByViewer.get(e.getWhoClicked().getUniqueId());
+        if(view != null) view.onDrag(e);
     }
 
     public static void reset() {
