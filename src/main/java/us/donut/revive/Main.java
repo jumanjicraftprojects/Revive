@@ -22,9 +22,16 @@ public class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        DownedStateManager.reset();
         saveDefaultConfig();
         instantPotionKey = new NamespacedKey(this, "instant_revive_potion");
         getServer().getPluginManager().registerEvents(reviveListener = new ReviveListener(), this);
+    }
+
+    @Override
+    public void onDisable() {
+        DownedStateManager.shutdown();
+        instance = null;
     }
     
     

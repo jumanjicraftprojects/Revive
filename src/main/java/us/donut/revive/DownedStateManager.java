@@ -23,6 +23,7 @@ public class DownedStateManager {
     }
 
     public static void createDownedState(Player player, EntityDamageEvent.DamageCause cause){
+        if (downedStates.containsKey(player.getUniqueId())) return;
         downedStates.put(player.getUniqueId(), new DownedState(player, cause));
 
         player.closeInventory();
@@ -44,17 +45,36 @@ public class DownedStateManager {
     }
 
     public static void removeDownedState(Player player){
+        removeDownedState(player, true);
+    }
+
+    private static void removeDownedState(Player player, boolean addCooldown){
         if(downedStates.containsKey(player.getUniqueId())){
             InventoryManager.closeInventory(player);
 
             var state = downedStates.remove(player.getUniqueId());
             state.delete();
 
-            cooldowns.add(player.getUniqueId());
-            Bukkit.getScheduler().runTaskLater(Main.getInstance(),
-                    () -> cooldowns.remove(player.getUniqueId()),
-                    (long) (Main.getInstance().getConfig().getDouble("down-cooldown-seconds") * 20));
+            if (addCooldown && Main.getInstance() != null && Main.getInstance().isEnabled()) {
+                cooldowns.add(player.getUniqueId());
+                Bukkit.getScheduler().runTaskLater(Main.getInstance(),
+                        () -> cooldowns.remove(player.getUniqueId()),
+                        Math.max(1L, (long) (Main.getInstance().getConfig().getDouble("down-cooldown-seconds") * 20)));
+            }
         }
+    }
+
+    public static void shutdown() {
+        for (DownedState state : List.copyOf(downedStates.values())) state.delete();
+        downedStates.clear();
+        cooldowns.clear();
+        InventoryManager.reset();
+    }
+
+    public static void reset() {
+        downedStates.clear();
+        cooldowns.clear();
+        InventoryManager.reset();
     }
 
     public static boolean isOnCooldown(HumanEntity player){

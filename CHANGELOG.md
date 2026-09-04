@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2
+
+- Fully removes downed-state tasks, effects, displays, carrier stands, boss bars, and inventory views on shutdown.
+- Prevents duplicate downed states and cross-world revive distance errors.
+- Marks temporary revive entities as non-persistent so they cannot survive a crash or restart.
+
 ## 1.2.1
 
 - Reduced downed-player proximity checks from every tick to four times per second.

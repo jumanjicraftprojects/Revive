@@ -19,8 +19,8 @@ import org.bukkit.util.Vector;
 
 public class DownedState {
 
-    private Main plugin = Main.getInstance();
-    private Player player;
+    private final Main plugin = Main.getInstance();
+    private final Player player;
     private ArmorStand armorStand;
     private TextDisplay display;
     private BukkitTask groundTask;
@@ -28,7 +28,7 @@ public class DownedState {
     private BukkitTask bleedoutTask;
     private BukkitTask reviveTask;
     private BossBar reviveBar;
-    private EntityDamageEvent.DamageCause downReason;
+    private final EntityDamageEvent.DamageCause downReason;
 
     public DownedState(Player player, EntityDamageEvent.DamageCause downReason) {
         this.player = player;
@@ -50,6 +50,7 @@ public class DownedState {
                         armorStand.setGravity(false);
                         armorStand.setInvulnerable(true);
                         armorStand.setSmall(true);
+                        armorStand.setPersistent(false);
                         armorStand.addPassenger(player);
                     });
 
@@ -57,6 +58,7 @@ public class DownedState {
                     display = player.getWorld().spawn(displayLocation, TextDisplay.class, entity ->{
                         entity.setText(ChatColor.RED + "Revive");
                         entity.setBillboard(Display.Billboard.VERTICAL);
+                        entity.setPersistent(false);
                     });
 
                     downTask = new BukkitRunnable() {
@@ -87,10 +89,12 @@ public class DownedState {
     }
 
     public void revive(Player reviver) {
+        if (armorStand == null || display == null || !player.isOnline()) return;
         var reviveRange = plugin.getConfig().getDouble("revive-range");
         reviveRange = reviveRange <= 0 ? 1 : reviveRange;
 
-        if(reviver.getLocation().distance(player.getLocation()) > reviveRange || !isLookingAt(reviver, player)){
+        if(!reviver.getWorld().equals(player.getWorld())
+                || reviver.getLocation().distance(player.getLocation()) > reviveRange || !isLookingAt(reviver, player)){
             if(isReviving()){
                 endRevive();
             }
@@ -115,7 +119,8 @@ public class DownedState {
                     reviveBar.setProgress(time / duration);
                     time++;
 
-                    if(reviver.getLocation().distance(player.getLocation()) > finalReviveRange || !isLookingAt(reviver, player)){
+                    if(!reviver.isOnline() || !reviver.getWorld().equals(player.getWorld())
+                            || reviver.getLocation().distance(player.getLocation()) > finalReviveRange || !isLookingAt(reviver, player)){
                         if(isReviving()){
                             endRevive();
                         }
@@ -136,6 +141,8 @@ public class DownedState {
     }
 
     public void delete() {
+        if (armorStand != null) armorStand.removePassenger(player);
+        player.removePotionEffect(PotionEffectType.BLINDNESS);
         if (armorStand != null) {
             armorStand.remove();
         }
@@ -184,7 +191,7 @@ public class DownedState {
             }, 0, 20);
         }
 
-        display.setText(ChatColor.RED + "Revive");
+        if (display != null) display.setText(ChatColor.RED + "Revive");
     }
 
     @SuppressWarnings({"deprecation", "removal"})

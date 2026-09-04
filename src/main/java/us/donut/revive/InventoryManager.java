@@ -6,6 +6,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
@@ -43,5 +44,11 @@ public class InventoryManager {
         if(!viewByViewer.containsKey(id)) return;
         var view = viewByViewer.get(id);
         view.onInteract(e);
+    }
+
+    public static void reset() {
+        for (InventoryView view : new HashSet<>(viewByOwner.values())) view.removeAllViewers();
+        viewByOwner.clear();
+        viewByViewer.clear();
     }
 }
